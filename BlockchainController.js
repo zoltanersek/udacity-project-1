@@ -16,6 +16,7 @@ class BlockchainController {
         this.submitStar();
         this.getBlockByHash();
         this.getStarsByOwner();
+        this.validateChain();
     }
 
     // Enpoint to Get a Block by Height (GET Endpoint)
@@ -34,6 +35,14 @@ class BlockchainController {
             }
             
         });
+    }
+
+    // Endpoint to validate the whole chain (GET Endpoint)
+    validateChain() {
+        this.app.get("/validateChain", async (req, res) => {
+            const errors = await this.blockchain.validateChain();
+            return res.status(200).json({errors})
+        })
     }
 
     // Endpoint that allows user to request Ownership of a Wallet address (POST Endpoint)

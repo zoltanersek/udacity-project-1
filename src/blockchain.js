@@ -70,7 +70,13 @@ class Blockchain {
       }
       block.hash = SHA256(JSON.stringify(block)).toString();
       self.chain.push(block);
-      resolve(block);
+      const errors = await self.validateChain();
+      if (errors.length > 0) {
+        self.chain.pop();
+        reject(errors);
+      } else {
+        resolve(block);
+      }
     });
   }
 
@@ -121,9 +127,9 @@ class Blockchain {
         reject(new Error("time is longer than 5 minutes"));
       }
       if (!bitcoinMessage.verify(message, address, signature)) {
-          reject(new Error("signature invalid"));
+        reject(new Error("signature invalid"));
       }
-      let block = new BlockClass.Block({ data: {owner: address, star}});
+      let block = new BlockClass.Block({ data: { owner: address, star } });
       block = self._addBlock(block).then((value) => resolve(value));
     });
   }
@@ -168,14 +174,14 @@ class Blockchain {
     let self = this;
     let stars = [];
     return new Promise((resolve, reject) => {
-        for (let i = 1; i < self.chain.length; i++){
-            const block = self.chain[i];
-            const data = block.getBData();
-            if (data.owner === address) {
-                stars.push(data);
-            }
+      for (let i = 1; i < self.chain.length; i++) {
+        const block = self.chain[i];
+        const data = block.getBData();
+        if (data.owner === address) {
+          stars.push(data);
         }
-        resolve(stars);
+      }
+      resolve(stars);
     });
   }
 
@@ -190,16 +196,16 @@ class Blockchain {
     let errorLog = [];
     return new Promise(async (resolve, reject) => {
       for (let i = 0; i < self.chain.length; i++) {
-          const block = self.chain[i];
+        const block = self.chain[i];
         block.validate().then((value) => {
           if (!value) {
             errorLog.push(block);
           } else {
-              if (i > 0) {
-                  if (block.previousBlockHash !== self.chain[i - 1].hash) {
-                      errorLog.push(block);
-                  }
+            if (i > 0) {
+              if (block.previousBlockHash !== self.chain[i - 1].hash) {
+                errorLog.push(block);
               }
+            }
           }
         });
       }
